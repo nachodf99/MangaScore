@@ -1,0 +1,19 @@
+{
+  "expo": {
+    "name": "MangaFish",
+    "slug": "mangafish",
+    "scheme": "mangafish",
+    "version": "0.1.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "automatic",
+    "plugins": ["expo-router", "expo-sqlite"],
+    "ios": { "supportsTablet": false, "bundleIdentifier": "es.mangafish.app" },
+    "android": {
+      "package": "es.mangafish.app",
+      "permissions": ["CAMERA", "ACCESS_NETWORK_STATE", "INTERNET"]
+    },
+    "extra": {
+      "eas": { "projectId": "REPLACE_WITH_EAS_PROJECT_ID" }
+    }
+  }
+}

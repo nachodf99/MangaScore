@@ -7,6 +7,9 @@ data class Participant(
     val createdAt: Long,
     val updatedAt: Long,
     val alias: String? = null,
-    val licenseNumber: String? = null,
+    val phoneNumber: String? = null,
+    val dni: String? = null,
+    val nir: String? = null,
+    val nira: String? = null,
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
 )

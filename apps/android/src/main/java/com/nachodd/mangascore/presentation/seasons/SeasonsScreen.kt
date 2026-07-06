@@ -32,6 +32,7 @@ import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Season
 import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
+import com.nachodd.mangascore.presentation.common.formatTimestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -154,7 +155,7 @@ private fun SeasonCard(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Inicio: ${season.startsAt}",
+                text = "Inicio: ${formatTimestamp(season.startsAt)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

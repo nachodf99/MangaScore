@@ -14,6 +14,9 @@ interface CatchDao {
     @Query("SELECT * FROM catches WHERE tournamentId = :tournamentId ORDER BY caughtAt ASC")
     fun observeByTournament(tournamentId: String): Flow<List<CatchEntity>>
 
+    @Query("SELECT * FROM catches WHERE participantId = :participantId ORDER BY caughtAt DESC")
+    fun observeByParticipant(participantId: String): Flow<List<CatchEntity>>
+
     @Query("SELECT * FROM catches WHERE syncStatus != 'SYNCED' ORDER BY updatedAt ASC")
     fun observePendingSync(): Flow<List<CatchEntity>>
 

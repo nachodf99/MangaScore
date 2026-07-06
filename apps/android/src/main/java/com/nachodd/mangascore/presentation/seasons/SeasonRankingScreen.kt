@@ -32,10 +32,12 @@ import com.nachodd.mangascore.domain.model.CompetitionType
 import com.nachodd.mangascore.domain.model.Participant
 import com.nachodd.mangascore.domain.model.Round
 import com.nachodd.mangascore.domain.model.SeasonRankingItem
+import com.nachodd.mangascore.domain.ranking.BiggestCatchCalculator
 import com.nachodd.mangascore.domain.ranking.RankingCalculator
 import com.nachodd.mangascore.domain.ranking.SeasonRankingCalculator
 import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
+import com.nachodd.mangascore.presentation.common.formatTimestamp
 import com.nachodd.mangascore.presentation.common.formatWeightGrams
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -115,11 +117,23 @@ private fun SeasonRankingContent(
                     item {
                         SeasonRankingHeader(uiState = uiState)
                     }
+                    uiState.biggestCatchOfSeason?.let { biggestCatch ->
+                        item {
+                            SeasonBiggestCatchCard(
+                                catch = biggestCatch,
+                                participantName = uiState.participantsById[biggestCatch.participantId]?.fullName
+                                    ?: "Participante desconocido",
+                                roundName = biggestCatch.roundId?.let(uiState.roundNameById::get),
+                            )
+                        }
+                    }
                     items(uiState.ranking, key = { it.id }) { item ->
                         SeasonRankingCard(
                             item = item,
                             participantName = uiState.participantsById[item.participantId]?.fullName
                                 ?: "Participante desconocido",
+                            biggestCatch = uiState.biggestCatchByParticipant[item.participantId],
+                            roundNameById = uiState.roundNameById,
                         )
                     }
                 }
@@ -158,9 +172,51 @@ private fun SeasonRankingHeader(
 }
 
 @Composable
+private fun SeasonBiggestCatchCard(
+    catch: Catch,
+    participantName: String,
+    roundName: String?,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(
+        modifier = modifier.fillMaxWidth(),
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+        ),
+    ) {
+        Column(
+            modifier = Modifier.padding(18.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
+        ) {
+            Text(
+                text = "Mayor pieza de la temporada",
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.SemiBold,
+            )
+            Text(
+                text = "${formatWeightGrams(catch.weightGrams)} - $participantName",
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+            )
+            Text(
+                text = listOfNotNull(
+                    catch.species,
+                    roundName,
+                    formatTimestamp(catch.caughtAt),
+                ).joinToString(" - "),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onPrimaryContainer,
+            )
+        }
+    }
+}
+
+@Composable
 private fun SeasonRankingCard(
     item: SeasonRankingItem,
     participantName: String,
+    biggestCatch: Catch?,
+    roundNameById: Map<String, String>,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
@@ -186,7 +242,11 @@ private fun SeasonRankingCard(
             )
             item.biggestCatchWeightGrams?.let { biggestCatchWeightGrams ->
                 Text(
-                    text = "Mayor pieza: ${formatWeightGrams(biggestCatchWeightGrams)}",
+                    text = "Mayor pieza personal: " + listOfNotNull(
+                        formatWeightGrams(biggestCatchWeightGrams),
+                        biggestCatch?.species,
+                        biggestCatch?.roundId?.let(roundNameById::get),
+                    ).joinToString(" - "),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
@@ -205,6 +265,9 @@ data class SeasonRankingUiState(
     val discardWorstRounds: Int = 0,
     val rounds: List<Round> = emptyList(),
     val catchesByRound: Map<String, List<Catch>> = emptyMap(),
+    val biggestCatchOfSeason: Catch? = null,
+    val biggestCatchByParticipant: Map<String, Catch> = emptyMap(),
+    val roundNameById: Map<String, String> = emptyMap(),
 )
 
 @HiltViewModel
@@ -215,6 +278,7 @@ class SeasonRankingViewModel @Inject constructor(
     private val seasonId: String = checkNotNull(savedStateHandle[MangaScoreRoute.SeasonRanking.SEASON_ID_ARG])
     private val rankingCalculator = RankingCalculator()
     private val seasonRankingCalculator = SeasonRankingCalculator()
+    private val biggestCatchCalculator = BiggestCatchCalculator()
     private var catchesJob: Job? = null
 
     private val _uiState = MutableStateFlow(SeasonRankingUiState())
@@ -245,6 +309,7 @@ class SeasonRankingViewModel @Inject constructor(
                     it.copy(
                         rounds = rounds,
                         roundsCount = rounds.size,
+                        roundNameById = rounds.associate { round -> round.id to round.name },
                         catchesByRound = it.catchesByRound.filterKeys { roundId ->
                             rounds.any { round -> round.id == roundId }
                         },
@@ -295,11 +360,14 @@ class SeasonRankingViewModel @Inject constructor(
                     isLoading = false,
                     ranking = emptyList(),
                     emptyMessage = emptyMessage,
+                    biggestCatchOfSeason = null,
+                    biggestCatchByParticipant = emptyMap(),
                 )
             }
             return
         }
 
+        val allCatches = state.catchesByRound.values.flatten()
         val roundRankings = state.rounds.associate { round ->
             val roundCatches = state.catchesByRound[round.id].orEmpty()
             round.id to if (roundCatches.isEmpty()) {
@@ -327,6 +395,15 @@ class SeasonRankingViewModel @Inject constructor(
                 isLoading = false,
                 ranking = ranking,
                 emptyMessage = null,
+                biggestCatchOfSeason = biggestCatchCalculator.getBiggestCatchForSeason(
+                    catches = allCatches,
+                    roundIds = state.rounds.map { round -> round.id }.toSet(),
+                ),
+                biggestCatchByParticipant = allCatches
+                    .groupBy { catch -> catch.participantId }
+                    .mapValues { (_, catches) -> biggestCatchCalculator.getBiggestCatch(catches) }
+                    .filterValues { catch -> catch != null }
+                    .mapValues { (_, catch) -> checkNotNull(catch) },
             )
         }
     }

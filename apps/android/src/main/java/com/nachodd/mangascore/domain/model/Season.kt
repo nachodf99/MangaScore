@@ -11,4 +11,5 @@ data class Season(
     val status: EventStatus = EventStatus.SCHEDULED,
     val scoringType: ScoringType = ScoringType.TOTAL_WEIGHT,
     val syncStatus: SyncStatus = SyncStatus.SYNCED,
+    val discardWorstRounds: Int = 0,
 )

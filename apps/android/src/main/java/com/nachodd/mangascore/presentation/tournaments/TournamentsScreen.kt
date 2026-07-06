@@ -30,6 +30,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Tournament
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -43,6 +44,7 @@ object TournamentsScreen {
     @Composable
     operator fun invoke(
         onTournamentClick: (String) -> Unit,
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: TournamentsViewModel = hiltViewModel(),
     ) {
@@ -51,6 +53,7 @@ object TournamentsScreen {
         TournamentsContent(
             uiState = uiState,
             onTournamentClick = onTournamentClick,
+            onBackClick = onBackClick,
             onCreateClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
             onNameChange = viewModel::onNameChange,
@@ -66,6 +69,7 @@ object TournamentsScreen {
 private fun TournamentsContent(
     uiState: TournamentsUiState,
     onTournamentClick: (String) -> Unit,
+    onBackClick: () -> Unit,
     onCreateClick: () -> Unit,
     onDismissDialog: () -> Unit,
     onNameChange: (String) -> Unit,
@@ -75,7 +79,12 @@ private fun TournamentsContent(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text("Torneos de un dia") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Torneos de un dia") },
+                navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreateClick) {
                 Text("+")

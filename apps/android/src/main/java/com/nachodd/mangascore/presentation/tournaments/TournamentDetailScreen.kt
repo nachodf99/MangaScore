@@ -24,6 +24,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Tournament
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -36,11 +37,16 @@ import kotlinx.coroutines.launch
 object TournamentDetailScreen {
     @Composable
     operator fun invoke(
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: TournamentDetailViewModel = hiltViewModel(),
     ) {
         val uiState by viewModel.uiState.collectAsState()
-        TournamentDetailContent(uiState = uiState, modifier = modifier)
+        TournamentDetailContent(
+            uiState = uiState,
+            onBackClick = onBackClick,
+            modifier = modifier,
+        )
     }
 }
 
@@ -48,11 +54,17 @@ object TournamentDetailScreen {
 @Composable
 private fun TournamentDetailContent(
     uiState: TournamentDetailUiState,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text(uiState.tournament?.name ?: "Torneo") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text(uiState.tournament?.name ?: "Torneo") },
+                navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier

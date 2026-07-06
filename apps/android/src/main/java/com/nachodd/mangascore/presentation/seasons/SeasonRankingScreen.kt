@@ -16,16 +16,23 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 
 object SeasonRankingScreen {
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     operator fun invoke(
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
     ) {
         Scaffold(
             modifier = modifier.fillMaxSize(),
-            topBar = { TopAppBar(title = { Text("Clasificacion general") }) },
+            topBar = {
+                TopAppBar(
+                    title = { Text("Clasificacion general") },
+                    navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+                )
+            },
         ) { paddingValues ->
             Column(
                 modifier = Modifier

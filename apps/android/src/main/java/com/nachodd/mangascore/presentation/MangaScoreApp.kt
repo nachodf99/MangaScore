@@ -37,6 +37,7 @@ fun MangaScoreApp() {
                 onSeasonClick = { seasonId ->
                     navController.navigate(MangaScoreRoute.SeasonDetail.createRoute(seasonId))
                 },
+                onBackClick = { navController.navigateUp() },
             )
         }
         composable(
@@ -51,6 +52,7 @@ fun MangaScoreApp() {
                 onSeasonRankingClick = { seasonId ->
                     navController.navigate(MangaScoreRoute.SeasonRanking.createRoute(seasonId))
                 },
+                onBackClick = { navController.navigateUp() },
             )
         }
         composable(
@@ -61,13 +63,16 @@ fun MangaScoreApp() {
                 },
             ),
         ) {
-            SeasonRankingScreen()
+            SeasonRankingScreen(
+                onBackClick = { navController.navigateUp() },
+            )
         }
         composable(MangaScoreRoute.Tournaments.route) {
             TournamentsScreen(
                 onTournamentClick = { tournamentId ->
                     navController.navigate(MangaScoreRoute.TournamentDetail.createRoute(tournamentId))
                 },
+                onBackClick = { navController.navigateUp() },
             )
         }
         composable(
@@ -78,13 +83,19 @@ fun MangaScoreApp() {
                 },
             ),
         ) {
-            TournamentDetailScreen()
+            TournamentDetailScreen(
+                onBackClick = { navController.navigateUp() },
+            )
         }
         composable(MangaScoreRoute.Participants.route) {
-            ParticipantsScreen()
+            ParticipantsScreen(
+                onBackClick = { navController.navigateUp() },
+            )
         }
         composable(MangaScoreRoute.SyncStatus.route) {
-            SyncStatusScreen()
+            SyncStatusScreen(
+                onBackClick = { navController.navigateUp() },
+            )
         }
     }
 }

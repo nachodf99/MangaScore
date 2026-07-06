@@ -33,6 +33,7 @@ import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Round
 import com.nachodd.mangascore.domain.model.Season
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -47,6 +48,7 @@ object SeasonDetailScreen {
     @Composable
     operator fun invoke(
         onSeasonRankingClick: (String) -> Unit,
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: SeasonDetailViewModel = hiltViewModel(),
     ) {
@@ -55,6 +57,7 @@ object SeasonDetailScreen {
         SeasonDetailContent(
             uiState = uiState,
             onSeasonRankingClick = onSeasonRankingClick,
+            onBackClick = onBackClick,
             onCreateRoundClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
             onRoundNameChange = viewModel::onRoundNameChange,
@@ -71,6 +74,7 @@ object SeasonDetailScreen {
 private fun SeasonDetailContent(
     uiState: SeasonDetailUiState,
     onSeasonRankingClick: (String) -> Unit,
+    onBackClick: () -> Unit,
     onCreateRoundClick: () -> Unit,
     onDismissDialog: () -> Unit,
     onRoundNameChange: (String) -> Unit,
@@ -82,7 +86,10 @@ private fun SeasonDetailContent(
     Scaffold(
         modifier = modifier.fillMaxSize(),
         topBar = {
-            TopAppBar(title = { Text(uiState.season?.name ?: "Temporada") })
+            TopAppBar(
+                title = { Text(uiState.season?.name ?: "Temporada") },
+                navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+            )
         },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreateRoundClick) {

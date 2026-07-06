@@ -9,3 +9,7 @@ dist
 apps/mobile/.expo
 apps/mobile/.eas
 *.log
+.gradle
+build
+**/build
+local.properties

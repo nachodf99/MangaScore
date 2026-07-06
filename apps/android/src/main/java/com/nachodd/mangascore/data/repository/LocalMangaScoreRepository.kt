@@ -187,10 +187,21 @@ class LocalMangaScoreRepository @Inject constructor(
             .observeByClub(DEFAULT_CLUB_ID)
             .map { participants -> participants.map(ParticipantMapper::toDomain) }
 
+    suspend fun getParticipant(participantId: String): Participant? =
+        database.participantDao().getById(participantId)?.let(ParticipantMapper::toDomain)
+
+    fun observeCatchesByParticipant(participantId: String): Flow<List<Catch>> =
+        database.catchDao()
+            .observeByParticipant(participantId)
+            .map { catches -> catches.map(CatchMapper::toDomain) }
+
     suspend fun createParticipant(
         fullName: String,
         alias: String?,
-        licenseNumber: String?,
+        phoneNumber: String?,
+        dni: String?,
+        nir: String?,
+        nira: String?,
     ) {
         val now = System.currentTimeMillis()
         database.participantDao().upsert(
@@ -202,7 +213,10 @@ class LocalMangaScoreRepository @Inject constructor(
                     createdAt = now,
                     updatedAt = now,
                     alias = alias?.trim()?.takeIf(String::isNotBlank),
-                    licenseNumber = licenseNumber?.trim()?.takeIf(String::isNotBlank),
+                    phoneNumber = phoneNumber?.trim()?.takeIf(String::isNotBlank),
+                    dni = dni?.trim()?.takeIf(String::isNotBlank),
+                    nir = nir?.trim()?.takeIf(String::isNotBlank),
+                    nira = nira?.trim()?.takeIf(String::isNotBlank),
                     syncStatus = SyncStatus.PENDING_CREATE,
                 ),
             ),

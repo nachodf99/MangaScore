@@ -13,7 +13,10 @@ object ParticipantMapper {
             createdAt = entity.createdAt,
             updatedAt = entity.updatedAt,
             alias = entity.alias,
-            licenseNumber = entity.licenseNumber,
+            phoneNumber = entity.phoneNumber,
+            dni = entity.dni,
+            nir = entity.nir,
+            nira = entity.nira,
             syncStatus = SyncStatus.valueOf(entity.syncStatus),
         )
 
@@ -25,7 +28,10 @@ object ParticipantMapper {
             createdAt = domain.createdAt,
             updatedAt = domain.updatedAt,
             alias = domain.alias,
-            licenseNumber = domain.licenseNumber,
+            phoneNumber = domain.phoneNumber,
+            dni = domain.dni,
+            nir = domain.nir,
+            nira = domain.nira,
             syncStatus = domain.syncStatus.name,
         )
 }

@@ -35,6 +35,7 @@ import com.nachodd.mangascore.domain.model.Round
 import com.nachodd.mangascore.domain.model.Season
 import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
+import com.nachodd.mangascore.presentation.common.formatTimestamp
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -111,7 +112,7 @@ private fun SeasonDetailContent(
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                Text("Clasificacion general")
+                Text("Ver clasificacion general")
             }
 
             if (uiState.rounds.isEmpty()) {
@@ -172,9 +173,15 @@ private fun RoundCard(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Programada: ${round.scheduledAt}",
+                text = "Programada: ${formatTimestamp(round.scheduledAt)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "Toca para registrar capturas y ver ranking",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
             )
         }
     }

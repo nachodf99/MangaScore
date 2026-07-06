@@ -43,6 +43,7 @@ import kotlinx.coroutines.launch
 object ParticipantsScreen {
     @Composable
     operator fun invoke(
+        onParticipantClick: (String) -> Unit,
         onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: ParticipantsViewModel = hiltViewModel(),
@@ -51,12 +52,16 @@ object ParticipantsScreen {
 
         ParticipantsContent(
             uiState = uiState,
+            onParticipantClick = onParticipantClick,
             onBackClick = onBackClick,
             onCreateClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
             onFullNameChange = viewModel::onFullNameChange,
             onAliasChange = viewModel::onAliasChange,
-            onLicenseNumberChange = viewModel::onLicenseNumberChange,
+            onPhoneNumberChange = viewModel::onPhoneNumberChange,
+            onDniChange = viewModel::onDniChange,
+            onNirChange = viewModel::onNirChange,
+            onNiraChange = viewModel::onNiraChange,
             onSaveParticipant = viewModel::saveParticipant,
             modifier = modifier,
         )
@@ -67,12 +72,16 @@ object ParticipantsScreen {
 @Composable
 private fun ParticipantsContent(
     uiState: ParticipantsUiState,
+    onParticipantClick: (String) -> Unit,
     onBackClick: () -> Unit,
     onCreateClick: () -> Unit,
     onDismissDialog: () -> Unit,
     onFullNameChange: (String) -> Unit,
     onAliasChange: (String) -> Unit,
-    onLicenseNumberChange: (String) -> Unit,
+    onPhoneNumberChange: (String) -> Unit,
+    onDniChange: (String) -> Unit,
+    onNirChange: (String) -> Unit,
+    onNiraChange: (String) -> Unit,
     onSaveParticipant: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -107,7 +116,10 @@ private fun ParticipantsContent(
                 verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 items(uiState.participants, key = { it.id }) { participant ->
-                    ParticipantCard(participant = participant)
+                    ParticipantCard(
+                        participant = participant,
+                        onClick = { onParticipantClick(participant.id) },
+                    )
                 }
             }
         }
@@ -119,7 +131,10 @@ private fun ParticipantsContent(
             onDismiss = onDismissDialog,
             onFullNameChange = onFullNameChange,
             onAliasChange = onAliasChange,
-            onLicenseNumberChange = onLicenseNumberChange,
+            onPhoneNumberChange = onPhoneNumberChange,
+            onDniChange = onDniChange,
+            onNirChange = onNirChange,
+            onNiraChange = onNiraChange,
             onSave = onSaveParticipant,
         )
     }
@@ -128,9 +143,11 @@ private fun ParticipantsContent(
 @Composable
 private fun ParticipantCard(
     participant: Participant,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -138,27 +155,24 @@ private fun ParticipantCard(
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(6.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Text(
                 text = participant.fullName,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
-            participant.alias?.let { alias ->
-                Text(
-                    text = "Alias: $alias",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
-            participant.licenseNumber?.let { license ->
-                Text(
-                    text = "Licencia: $license",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
-            }
+            Text(
+                text = "NIR: ${participant.nir.orNotIndicated()} - Tel: ${participant.phoneNumber.orNotIndicated()}",
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(
+                text = "Toca para ver ficha",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary,
+                fontWeight = FontWeight.SemiBold,
+            )
         }
     }
 }
@@ -169,38 +183,75 @@ private fun CreateParticipantDialog(
     onDismiss: () -> Unit,
     onFullNameChange: (String) -> Unit,
     onAliasChange: (String) -> Unit,
-    onLicenseNumberChange: (String) -> Unit,
+    onPhoneNumberChange: (String) -> Unit,
+    onDniChange: (String) -> Unit,
+    onNirChange: (String) -> Unit,
+    onNiraChange: (String) -> Unit,
     onSave: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Agregar participante") },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                TextField(
-                    value = uiState.fullName,
-                    onValueChange = onFullNameChange,
-                    label = { Text("Nombre completo") },
-                    singleLine = true,
-                )
-                TextField(
-                    value = uiState.alias,
-                    onValueChange = onAliasChange,
-                    label = { Text("Alias opcional") },
-                    singleLine = true,
-                )
-                TextField(
-                    value = uiState.licenseNumber,
-                    onValueChange = onLicenseNumberChange,
-                    label = { Text("Licencia opcional") },
-                    singleLine = true,
-                )
-                uiState.errorMessage?.let { error ->
-                    Text(
-                        text = error,
-                        color = MaterialTheme.colorScheme.error,
-                        style = MaterialTheme.typography.bodyMedium,
+            LazyColumn(
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                item {
+                    TextField(
+                        value = uiState.fullName,
+                        onValueChange = onFullNameChange,
+                        label = { Text("Nombre completo") },
+                        singleLine = true,
                     )
+                }
+                item {
+                    TextField(
+                        value = uiState.alias,
+                        onValueChange = onAliasChange,
+                        label = { Text("Alias opcional") },
+                        singleLine = true,
+                    )
+                }
+                item {
+                    TextField(
+                        value = uiState.phoneNumber,
+                        onValueChange = onPhoneNumberChange,
+                        label = { Text("Telefono opcional") },
+                        singleLine = true,
+                    )
+                }
+                item {
+                    TextField(
+                        value = uiState.dni,
+                        onValueChange = onDniChange,
+                        label = { Text("DNI opcional") },
+                        singleLine = true,
+                    )
+                }
+                item {
+                    TextField(
+                        value = uiState.nir,
+                        onValueChange = onNirChange,
+                        label = { Text("NIR opcional") },
+                        singleLine = true,
+                    )
+                }
+                item {
+                    TextField(
+                        value = uiState.nira,
+                        onValueChange = onNiraChange,
+                        label = { Text("NIRA opcional") },
+                        singleLine = true,
+                    )
+                }
+                uiState.errorMessage?.let { error ->
+                    item {
+                        Text(
+                            text = error,
+                            color = MaterialTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
                 }
             }
         },
@@ -222,7 +273,10 @@ data class ParticipantsUiState(
     val isCreateDialogVisible: Boolean = false,
     val fullName: String = "",
     val alias: String = "",
-    val licenseNumber: String = "",
+    val phoneNumber: String = "",
+    val dni: String = "",
+    val nir: String = "",
+    val nira: String = "",
     val errorMessage: String? = null,
 )
 
@@ -251,7 +305,10 @@ class ParticipantsViewModel @Inject constructor(
                 isCreateDialogVisible = false,
                 fullName = "",
                 alias = "",
-                licenseNumber = "",
+                phoneNumber = "",
+                dni = "",
+                nir = "",
+                nira = "",
                 errorMessage = null,
             )
         }
@@ -265,8 +322,20 @@ class ParticipantsViewModel @Inject constructor(
         _uiState.update { it.copy(alias = value, errorMessage = null) }
     }
 
-    fun onLicenseNumberChange(value: String) {
-        _uiState.update { it.copy(licenseNumber = value, errorMessage = null) }
+    fun onPhoneNumberChange(value: String) {
+        _uiState.update { it.copy(phoneNumber = value, errorMessage = null) }
+    }
+
+    fun onDniChange(value: String) {
+        _uiState.update { it.copy(dni = value, errorMessage = null) }
+    }
+
+    fun onNirChange(value: String) {
+        _uiState.update { it.copy(nir = value, errorMessage = null) }
+    }
+
+    fun onNiraChange(value: String) {
+        _uiState.update { it.copy(nira = value, errorMessage = null) }
     }
 
     fun saveParticipant() {
@@ -281,9 +350,14 @@ class ParticipantsViewModel @Inject constructor(
             repository.createParticipant(
                 fullName = fullName,
                 alias = state.alias,
-                licenseNumber = state.licenseNumber,
+                phoneNumber = state.phoneNumber,
+                dni = state.dni,
+                nir = state.nir,
+                nira = state.nira,
             )
             hideCreateDialog()
         }
     }
 }
+
+private fun String?.orNotIndicated(): String = this?.takeIf(String::isNotBlank) ?: "No indicado"

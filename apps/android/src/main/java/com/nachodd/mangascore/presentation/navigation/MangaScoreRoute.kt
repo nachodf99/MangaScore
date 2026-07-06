@@ -25,5 +25,10 @@ sealed class MangaScoreRoute(val route: String) {
         fun createRoute(tournamentId: String): String = "tournaments/$tournamentId"
     }
     data object Participants : MangaScoreRoute("participants")
+    data object ParticipantDetail : MangaScoreRoute("participants/{participantId}") {
+        const val PARTICIPANT_ID_ARG = "participantId"
+
+        fun createRoute(participantId: String): String = "participants/$participantId"
+    }
     data object SyncStatus : MangaScoreRoute("sync_status")
 }

@@ -27,7 +27,7 @@ import com.nachodd.mangascore.data.local.entity.TournamentEntity
         RegistrationEntity::class,
         CatchEntity::class,
     ],
-    version = 1,
+    version = 2,
     exportSchema = false,
 )
 abstract class AppDatabase : RoomDatabase() {

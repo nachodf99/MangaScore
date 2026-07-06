@@ -8,6 +8,7 @@ import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
 import com.nachodd.mangascore.presentation.home.HomeScreen
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
+import com.nachodd.mangascore.presentation.participants.ParticipantDetailScreen
 import com.nachodd.mangascore.presentation.participants.ParticipantsScreen
 import com.nachodd.mangascore.presentation.rounds.RoundDetailScreen
 import com.nachodd.mangascore.presentation.seasons.SeasonDetailScreen
@@ -105,6 +106,21 @@ fun MangaScoreApp() {
         }
         composable(MangaScoreRoute.Participants.route) {
             ParticipantsScreen(
+                onParticipantClick = { participantId ->
+                    navController.navigate(MangaScoreRoute.ParticipantDetail.createRoute(participantId))
+                },
+                onBackClick = { navController.navigateUp() },
+            )
+        }
+        composable(
+            route = MangaScoreRoute.ParticipantDetail.route,
+            arguments = listOf(
+                navArgument(MangaScoreRoute.ParticipantDetail.PARTICIPANT_ID_ARG) {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            ParticipantDetailScreen(
                 onBackClick = { navController.navigateUp() },
             )
         }

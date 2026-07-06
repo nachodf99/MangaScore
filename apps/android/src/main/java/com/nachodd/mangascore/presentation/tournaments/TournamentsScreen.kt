@@ -32,6 +32,7 @@ import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Tournament
 import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
+import com.nachodd.mangascore.presentation.common.formatTimestamp
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -151,7 +152,7 @@ private fun TournamentCard(
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Fecha: ${tournament.scheduledAt}",
+                text = "Fecha: ${formatTimestamp(tournament.scheduledAt)}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )

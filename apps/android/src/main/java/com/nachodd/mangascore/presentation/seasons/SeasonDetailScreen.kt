@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.FloatingActionButton
@@ -26,11 +27,14 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
+import com.nachodd.mangascore.domain.model.Round
 import com.nachodd.mangascore.domain.model.Season
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
+import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,24 +43,24 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-object SeasonsScreen {
+object SeasonDetailScreen {
     @Composable
     operator fun invoke(
-        onSeasonClick: (String) -> Unit,
+        onSeasonRankingClick: (String) -> Unit,
         modifier: Modifier = Modifier,
-        viewModel: SeasonsViewModel = hiltViewModel(),
+        viewModel: SeasonDetailViewModel = hiltViewModel(),
     ) {
         val uiState by viewModel.uiState.collectAsState()
 
-        SeasonsContent(
+        SeasonDetailContent(
             uiState = uiState,
-            onSeasonClick = onSeasonClick,
-            onCreateClick = viewModel::showCreateDialog,
+            onSeasonRankingClick = onSeasonRankingClick,
+            onCreateRoundClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
-            onNameChange = viewModel::onNameChange,
-            onStartTimestampChange = viewModel::onStartTimestampChange,
-            onDiscardWorstRoundsChange = viewModel::onDiscardWorstRoundsChange,
-            onSaveSeason = viewModel::saveSeason,
+            onRoundNameChange = viewModel::onRoundNameChange,
+            onRoundNumberChange = viewModel::onRoundNumberChange,
+            onRoundLocationChange = viewModel::onRoundLocationChange,
+            onSaveRound = viewModel::saveRound,
             modifier = modifier,
         )
     }
@@ -64,72 +68,80 @@ object SeasonsScreen {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun SeasonsContent(
-    uiState: SeasonsUiState,
-    onSeasonClick: (String) -> Unit,
-    onCreateClick: () -> Unit,
+private fun SeasonDetailContent(
+    uiState: SeasonDetailUiState,
+    onSeasonRankingClick: (String) -> Unit,
+    onCreateRoundClick: () -> Unit,
     onDismissDialog: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onStartTimestampChange: (String) -> Unit,
-    onDiscardWorstRoundsChange: (String) -> Unit,
-    onSaveSeason: () -> Unit,
+    onRoundNameChange: (String) -> Unit,
+    onRoundNumberChange: (String) -> Unit,
+    onRoundLocationChange: (String) -> Unit,
+    onSaveRound: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text("Temporadas") }) },
+        topBar = {
+            TopAppBar(title = { Text(uiState.season?.name ?: "Temporada") })
+        },
         floatingActionButton = {
-            FloatingActionButton(onClick = onCreateClick) {
+            FloatingActionButton(onClick = onCreateRoundClick) {
                 Text("+")
             }
         },
     ) { paddingValues ->
-        if (uiState.seasons.isEmpty()) {
-            EmptyStateContent(
-                title = "Sin temporadas",
-                description = "Crea la primera temporada del club para empezar a organizar mangas y clasificaciones.",
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(paddingValues),
+        ) {
+            Button(
+                onClick = { onSeasonRankingClick(uiState.seasonId) },
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-            )
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp),
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 12.dp),
             ) {
-                items(uiState.seasons, key = { it.id }) { season ->
-                    SeasonCard(
-                        season = season,
-                        onClick = { onSeasonClick(season.id) },
-                    )
+                Text("Clasificacion general")
+            }
+
+            if (uiState.rounds.isEmpty()) {
+                EmptyStateContent(
+                    title = "Sin mangas",
+                    description = "Crea la primera manga de esta temporada para empezar a registrar jornadas.",
+                    modifier = Modifier.fillMaxSize(),
+                )
+            } else {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    items(uiState.rounds, key = { it.id }) { round ->
+                        RoundCard(round = round)
+                    }
                 }
             }
         }
     }
 
     if (uiState.isCreateDialogVisible) {
-        CreateSeasonDialog(
+        CreateRoundDialog(
             uiState = uiState,
             onDismiss = onDismissDialog,
-            onNameChange = onNameChange,
-            onStartTimestampChange = onStartTimestampChange,
-            onDiscardWorstRoundsChange = onDiscardWorstRoundsChange,
-            onSave = onSaveSeason,
+            onRoundNameChange = onRoundNameChange,
+            onRoundNumberChange = onRoundNumberChange,
+            onRoundLocationChange = onRoundLocationChange,
+            onSave = onSaveRound,
         )
     }
 }
 
 @Composable
-private fun SeasonCard(
-    season: Season,
-    onClick: () -> Unit,
+private fun RoundCard(
+    round: Round,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
-        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,
@@ -137,20 +149,15 @@ private fun SeasonCard(
     ) {
         Column(
             modifier = Modifier.padding(18.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(6.dp),
         ) {
             Text(
-                text = season.name,
+                text = round.name,
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.SemiBold,
             )
             Text(
-                text = "Inicio: ${season.startsAt}",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
-            Text(
-                text = "Descartes: ${season.discardWorstRounds}",
+                text = "Programada: ${round.scheduledAt}",
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
@@ -159,35 +166,35 @@ private fun SeasonCard(
 }
 
 @Composable
-private fun CreateSeasonDialog(
-    uiState: SeasonsUiState,
+private fun CreateRoundDialog(
+    uiState: SeasonDetailUiState,
     onDismiss: () -> Unit,
-    onNameChange: (String) -> Unit,
-    onStartTimestampChange: (String) -> Unit,
-    onDiscardWorstRoundsChange: (String) -> Unit,
+    onRoundNameChange: (String) -> Unit,
+    onRoundNumberChange: (String) -> Unit,
+    onRoundLocationChange: (String) -> Unit,
     onSave: () -> Unit,
 ) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("Crear temporada") },
+        title = { Text("Crear manga") },
         text = {
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 TextField(
-                    value = uiState.name,
-                    onValueChange = onNameChange,
+                    value = uiState.roundName,
+                    onValueChange = onRoundNameChange,
                     label = { Text("Nombre") },
                     singleLine = true,
                 )
                 TextField(
-                    value = uiState.startTimestamp,
-                    onValueChange = onStartTimestampChange,
-                    label = { Text("Inicio opcional (timestamp)") },
+                    value = uiState.roundNumber,
+                    onValueChange = onRoundNumberChange,
+                    label = { Text("Numero de manga") },
                     singleLine = true,
                 )
                 TextField(
-                    value = uiState.discardWorstRounds,
-                    onValueChange = onDiscardWorstRoundsChange,
-                    label = { Text("Descartes de peores mangas") },
+                    value = uiState.roundLocation,
+                    onValueChange = onRoundLocationChange,
+                    label = { Text("Lugar opcional") },
                     singleLine = true,
                 )
                 uiState.errorMessage?.let { error ->
@@ -212,92 +219,86 @@ private fun CreateSeasonDialog(
     )
 }
 
-data class SeasonsUiState(
-    val seasons: List<Season> = emptyList(),
+data class SeasonDetailUiState(
+    val seasonId: String = "",
+    val season: Season? = null,
+    val rounds: List<Round> = emptyList(),
     val isCreateDialogVisible: Boolean = false,
-    val name: String = "",
-    val startTimestamp: String = "",
-    val discardWorstRounds: String = "0",
+    val roundName: String = "",
+    val roundNumber: String = "",
+    val roundLocation: String = "",
     val errorMessage: String? = null,
 )
 
 @HiltViewModel
-class SeasonsViewModel @Inject constructor(
+class SeasonDetailViewModel @Inject constructor(
+    savedStateHandle: SavedStateHandle,
     private val repository: LocalMangaScoreRepository,
 ) : ViewModel() {
-    private val _uiState = MutableStateFlow(SeasonsUiState())
-    val uiState: StateFlow<SeasonsUiState> = _uiState.asStateFlow()
+    private val seasonId: String = checkNotNull(savedStateHandle[MangaScoreRoute.SeasonDetail.SEASON_ID_ARG])
+
+    private val _uiState = MutableStateFlow(SeasonDetailUiState(seasonId = seasonId))
+    val uiState: StateFlow<SeasonDetailUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            repository.observeSeasons().collect { seasons ->
-                _uiState.update { it.copy(seasons = seasons) }
+            _uiState.update { it.copy(season = repository.getSeason(seasonId)) }
+        }
+        viewModelScope.launch {
+            repository.observeRounds(seasonId).collect { rounds ->
+                _uiState.update { it.copy(rounds = rounds) }
             }
         }
     }
 
     fun showCreateDialog() {
-        _uiState.update {
-            it.copy(
-                isCreateDialogVisible = true,
-                errorMessage = null,
-            )
-        }
+        _uiState.update { it.copy(isCreateDialogVisible = true, errorMessage = null) }
     }
 
     fun hideCreateDialog() {
         _uiState.update {
             it.copy(
                 isCreateDialogVisible = false,
-                name = "",
-                startTimestamp = "",
-                discardWorstRounds = "0",
+                roundName = "",
+                roundNumber = "",
+                roundLocation = "",
                 errorMessage = null,
             )
         }
     }
 
-    fun onNameChange(value: String) {
-        _uiState.update { it.copy(name = value, errorMessage = null) }
+    fun onRoundNameChange(value: String) {
+        _uiState.update { it.copy(roundName = value, errorMessage = null) }
     }
 
-    fun onStartTimestampChange(value: String) {
-        _uiState.update { it.copy(startTimestamp = value, errorMessage = null) }
+    fun onRoundNumberChange(value: String) {
+        _uiState.update { it.copy(roundNumber = value, errorMessage = null) }
     }
 
-    fun onDiscardWorstRoundsChange(value: String) {
-        _uiState.update { it.copy(discardWorstRounds = value, errorMessage = null) }
+    fun onRoundLocationChange(value: String) {
+        _uiState.update { it.copy(roundLocation = value, errorMessage = null) }
     }
 
-    fun saveSeason() {
+    fun saveRound() {
         val state = _uiState.value
-        val name = state.name.trim()
+        val name = state.roundName.trim()
+        val number = state.roundNumber.trim().toIntOrNull()
+
         if (name.isBlank()) {
             _uiState.update { it.copy(errorMessage = "El nombre es obligatorio.") }
             return
         }
-
-        val startTimestampInput = state.startTimestamp.trim()
-        val startsAt = if (startTimestampInput.isBlank()) {
-            System.currentTimeMillis()
-        } else {
-            startTimestampInput.toLongOrNull()
-        }
-        if (startsAt == null) {
-            _uiState.update { it.copy(errorMessage = "El inicio debe ser un timestamp valido.") }
-            return
-        }
-        val discardWorstRounds = state.discardWorstRounds.trim().toIntOrNull()
-        if (discardWorstRounds == null || discardWorstRounds < 0) {
-            _uiState.update { it.copy(errorMessage = "Los descartes deben ser un numero valido.") }
+        if (number == null || number <= 0) {
+            _uiState.update { it.copy(errorMessage = "El numero de manga debe ser valido.") }
             return
         }
 
         viewModelScope.launch {
-            repository.createSeason(
+            repository.createRound(
+                seasonId = seasonId,
                 name = name,
-                startsAt = startsAt,
-                discardWorstRounds = discardWorstRounds,
+                roundNumber = number,
+                location = state.roundLocation,
             )
             hideCreateDialog()
         }

@@ -13,7 +13,13 @@ class RankingCalculator {
         roundId: String? = null,
         tournamentId: String? = null,
     ): List<RankingItem> {
-        val catchesByParticipant = catches.groupBy { it.participantId }
+        val filteredCatches = filterCatchesByCompetition(
+            catches = catches,
+            competitionType = competitionType,
+            roundId = roundId,
+            tournamentId = tournamentId,
+        )
+        val catchesByParticipant = filteredCatches.groupBy { it.participantId }
 
         return participants
             .map { participant ->
@@ -51,6 +57,22 @@ class RankingCalculator {
                 )
             }
     }
+
+    private fun filterCatchesByCompetition(
+        catches: List<Catch>,
+        competitionType: CompetitionType,
+        roundId: String?,
+        tournamentId: String?,
+    ): List<Catch> =
+        when {
+            competitionType == CompetitionType.ROUND && roundId != null ->
+                catches.filter { it.roundId == roundId }
+
+            competitionType == CompetitionType.TOURNAMENT && tournamentId != null ->
+                catches.filter { it.tournamentId == tournamentId }
+
+            else -> catches
+        }
 
     private fun buildRankingItemId(
         competitionType: CompetitionType,

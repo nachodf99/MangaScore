@@ -25,6 +25,8 @@ import androidx.compose.ui.unit.dp
 import com.nachodd.mangascore.domain.model.Catch
 import com.nachodd.mangascore.domain.model.Participant
 import com.nachodd.mangascore.domain.model.RankingItem
+import com.nachodd.mangascore.presentation.common.formatTimestamp
+import com.nachodd.mangascore.presentation.common.formatWeightGrams
 
 @Composable
 fun CatchRegistrationDialog(
@@ -125,7 +127,7 @@ fun CatchList(
                         fontWeight = FontWeight.SemiBold,
                     )
                     Text(
-                        text = "${catch.weightGrams} g",
+                        text = formatWeightGrams(catch.weightGrams),
                         style = MaterialTheme.typography.bodyLarge,
                     )
                     catch.species?.let { species ->
@@ -136,7 +138,7 @@ fun CatchList(
                         )
                     }
                     Text(
-                        text = "Hora: ${catch.caughtAt}",
+                        text = "Hora: ${formatTimestamp(catch.caughtAt)}",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
@@ -190,7 +192,7 @@ fun BiggestCatchCard(
         } else {
             Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
                 Text(
-                    text = "${catch.weightGrams} g",
+                    text = formatWeightGrams(catch.weightGrams),
                     style = MaterialTheme.typography.titleLarge,
                     fontWeight = FontWeight.Bold,
                 )
@@ -269,7 +271,7 @@ private fun RankingRows(
                     )
                 }
                 Text(
-                    text = "${item.totalWeightGrams} g",
+                    text = formatWeightGrams(item.totalWeightGrams),
                     style = MaterialTheme.typography.bodyLarge,
                     fontWeight = FontWeight.SemiBold,
                 )

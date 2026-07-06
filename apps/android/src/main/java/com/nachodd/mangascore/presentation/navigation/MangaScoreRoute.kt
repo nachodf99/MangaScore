@@ -13,6 +13,11 @@ sealed class MangaScoreRoute(val route: String) {
 
         fun createRoute(seasonId: String): String = "seasons/$seasonId/ranking"
     }
+    data object RoundDetail : MangaScoreRoute("rounds/{roundId}") {
+        const val ROUND_ID_ARG = "roundId"
+
+        fun createRoute(roundId: String): String = "rounds/$roundId"
+    }
     data object Tournaments : MangaScoreRoute("tournaments")
     data object TournamentDetail : MangaScoreRoute("tournaments/{tournamentId}") {
         const val TOURNAMENT_ID_ARG = "tournamentId"

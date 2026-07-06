@@ -9,6 +9,7 @@ import androidx.navigation.navArgument
 import com.nachodd.mangascore.presentation.home.HomeScreen
 import com.nachodd.mangascore.presentation.navigation.MangaScoreRoute
 import com.nachodd.mangascore.presentation.participants.ParticipantsScreen
+import com.nachodd.mangascore.presentation.rounds.RoundDetailScreen
 import com.nachodd.mangascore.presentation.seasons.SeasonDetailScreen
 import com.nachodd.mangascore.presentation.seasons.SeasonRankingScreen
 import com.nachodd.mangascore.presentation.seasons.SeasonsScreen
@@ -52,6 +53,9 @@ fun MangaScoreApp() {
                 onSeasonRankingClick = { seasonId ->
                     navController.navigate(MangaScoreRoute.SeasonRanking.createRoute(seasonId))
                 },
+                onRoundClick = { roundId ->
+                    navController.navigate(MangaScoreRoute.RoundDetail.createRoute(roundId))
+                },
                 onBackClick = { navController.navigateUp() },
             )
         }
@@ -64,6 +68,18 @@ fun MangaScoreApp() {
             ),
         ) {
             SeasonRankingScreen(
+                onBackClick = { navController.navigateUp() },
+            )
+        }
+        composable(
+            route = MangaScoreRoute.RoundDetail.route,
+            arguments = listOf(
+                navArgument(MangaScoreRoute.RoundDetail.ROUND_ID_ARG) {
+                    type = NavType.StringType
+                },
+            ),
+        ) {
+            RoundDetailScreen(
                 onBackClick = { navController.navigateUp() },
             )
         }

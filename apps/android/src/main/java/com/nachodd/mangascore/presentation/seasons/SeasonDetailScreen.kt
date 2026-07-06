@@ -48,6 +48,7 @@ object SeasonDetailScreen {
     @Composable
     operator fun invoke(
         onSeasonRankingClick: (String) -> Unit,
+        onRoundClick: (String) -> Unit,
         onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: SeasonDetailViewModel = hiltViewModel(),
@@ -57,6 +58,7 @@ object SeasonDetailScreen {
         SeasonDetailContent(
             uiState = uiState,
             onSeasonRankingClick = onSeasonRankingClick,
+            onRoundClick = onRoundClick,
             onBackClick = onBackClick,
             onCreateRoundClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
@@ -74,6 +76,7 @@ object SeasonDetailScreen {
 private fun SeasonDetailContent(
     uiState: SeasonDetailUiState,
     onSeasonRankingClick: (String) -> Unit,
+    onRoundClick: (String) -> Unit,
     onBackClick: () -> Unit,
     onCreateRoundClick: () -> Unit,
     onDismissDialog: () -> Unit,
@@ -124,7 +127,10 @@ private fun SeasonDetailContent(
                     verticalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
                     items(uiState.rounds, key = { it.id }) { round ->
-                        RoundCard(round = round)
+                        RoundCard(
+                            round = round,
+                            onClick = { onRoundClick(round.id) },
+                        )
                     }
                 }
             }
@@ -146,9 +152,11 @@ private fun SeasonDetailContent(
 @Composable
 private fun RoundCard(
     round: Round,
+    onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     OutlinedCard(
+        onClick = onClick,
         modifier = modifier.fillMaxWidth(),
         colors = CardDefaults.outlinedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainer,

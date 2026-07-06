@@ -1,4 +1,4 @@
-package com.nachodd.mangascore.presentation.tournaments
+package com.nachodd.mangascore.presentation.rounds
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -26,7 +26,7 @@ import com.nachodd.mangascore.domain.model.Catch
 import com.nachodd.mangascore.domain.model.CompetitionType
 import com.nachodd.mangascore.domain.model.Participant
 import com.nachodd.mangascore.domain.model.RankingItem
-import com.nachodd.mangascore.domain.model.Tournament
+import com.nachodd.mangascore.domain.model.Round
 import com.nachodd.mangascore.domain.ranking.BiggestCatchCalculator
 import com.nachodd.mangascore.domain.ranking.RankingCalculator
 import com.nachodd.mangascore.presentation.catches.BiggestCatchCard
@@ -45,16 +45,16 @@ import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
-object TournamentDetailScreen {
+object RoundDetailScreen {
     @Composable
     operator fun invoke(
         onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
-        viewModel: TournamentDetailViewModel = hiltViewModel(),
+        viewModel: RoundDetailViewModel = hiltViewModel(),
     ) {
         val uiState by viewModel.uiState.collectAsState()
 
-        TournamentDetailContent(
+        RoundDetailContent(
             uiState = uiState,
             onBackClick = onBackClick,
             onRegisterCatchClick = viewModel::showRegisterCatchDialog,
@@ -70,8 +70,8 @@ object TournamentDetailScreen {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-private fun TournamentDetailContent(
-    uiState: TournamentDetailUiState,
+private fun RoundDetailContent(
+    uiState: RoundDetailUiState,
     onBackClick: () -> Unit,
     onRegisterCatchClick: () -> Unit,
     onDismissDialog: () -> Unit,
@@ -85,7 +85,7 @@ private fun TournamentDetailContent(
         modifier = modifier.fillMaxSize(),
         topBar = {
             TopAppBar(
-                title = { Text(uiState.tournament?.name ?: "Torneo") },
+                title = { Text(uiState.round?.name ?: "Manga") },
                 navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
             )
         },
@@ -106,7 +106,7 @@ private fun TournamentDetailContent(
                 }
                 EmptyStateContent(
                     title = "Sin capturas",
-                    description = "Registra la primera captura del torneo para ver ranking, top 3 y mayor pieza.",
+                    description = "Registra la primera captura de esta manga para ver ranking, top 3 y mayor pieza.",
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(0.dp),
@@ -166,9 +166,9 @@ private fun TournamentDetailContent(
     }
 }
 
-data class TournamentDetailUiState(
-    val tournamentId: String = "",
-    val tournament: Tournament? = null,
+data class RoundDetailUiState(
+    val roundId: String = "",
+    val round: Round? = null,
     val catches: List<Catch> = emptyList(),
     val participants: List<Participant> = emptyList(),
     val participantNameById: Map<String, String> = emptyMap(),
@@ -182,24 +182,24 @@ data class TournamentDetailUiState(
 )
 
 @HiltViewModel
-class TournamentDetailViewModel @Inject constructor(
+class RoundDetailViewModel @Inject constructor(
     savedStateHandle: SavedStateHandle,
     private val repository: LocalMangaScoreRepository,
 ) : ViewModel() {
-    private val tournamentId: String = checkNotNull(savedStateHandle[MangaScoreRoute.TournamentDetail.TOURNAMENT_ID_ARG])
+    private val roundId: String = checkNotNull(savedStateHandle[MangaScoreRoute.RoundDetail.ROUND_ID_ARG])
     private val rankingCalculator = RankingCalculator()
     private val biggestCatchCalculator = BiggestCatchCalculator()
 
-    private val _uiState = MutableStateFlow(TournamentDetailUiState(tournamentId = tournamentId))
-    val uiState: StateFlow<TournamentDetailUiState> = _uiState.asStateFlow()
+    private val _uiState = MutableStateFlow(RoundDetailUiState(roundId = roundId))
+    val uiState: StateFlow<RoundDetailUiState> = _uiState.asStateFlow()
 
     init {
         viewModelScope.launch {
-            _uiState.update { it.copy(tournament = repository.getTournament(tournamentId)) }
+            _uiState.update { it.copy(round = repository.getRound(roundId)) }
         }
         viewModelScope.launch {
             combine(
-                repository.observeCatchesByTournament(tournamentId),
+                repository.observeCatchesByRound(roundId),
                 repository.observeParticipants(),
             ) { catches, participants ->
                 val ranking = if (catches.isEmpty()) {
@@ -208,8 +208,8 @@ class TournamentDetailViewModel @Inject constructor(
                     rankingCalculator.calculateRanking(
                         catches = catches,
                         participants = participants,
-                        competitionType = CompetitionType.TOURNAMENT,
-                        tournamentId = tournamentId,
+                        competitionType = CompetitionType.ROUND,
+                        roundId = roundId,
                     )
                 }
                 CatchSummary(
@@ -217,7 +217,7 @@ class TournamentDetailViewModel @Inject constructor(
                     participants = participants,
                     participantNameById = participants.associate { it.id to it.fullName },
                     ranking = ranking,
-                    biggestCatch = biggestCatchCalculator.getBiggestCatchForTournament(catches, tournamentId),
+                    biggestCatch = biggestCatchCalculator.getBiggestCatchForRound(catches, roundId),
                 )
             }.collect { summary ->
                 _uiState.update {
@@ -286,8 +286,8 @@ class TournamentDetailViewModel @Inject constructor(
         }
 
         viewModelScope.launch {
-            repository.createCatchForTournament(
-                tournamentId = tournamentId,
+            repository.createCatchForRound(
+                roundId = roundId,
                 participantId = participantId,
                 weightGrams = weightGrams,
                 species = state.species,

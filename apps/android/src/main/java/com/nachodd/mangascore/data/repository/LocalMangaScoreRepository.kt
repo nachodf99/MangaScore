@@ -1,10 +1,12 @@
 package com.nachodd.mangascore.data.repository
 
 import com.nachodd.mangascore.data.local.database.AppDatabase
+import com.nachodd.mangascore.data.mapper.CatchMapper
 import com.nachodd.mangascore.data.mapper.ParticipantMapper
 import com.nachodd.mangascore.data.mapper.RoundMapper
 import com.nachodd.mangascore.data.mapper.SeasonMapper
 import com.nachodd.mangascore.data.mapper.TournamentMapper
+import com.nachodd.mangascore.domain.model.Catch
 import com.nachodd.mangascore.domain.model.EventStatus
 import com.nachodd.mangascore.domain.model.Participant
 import com.nachodd.mangascore.domain.model.Round
@@ -59,6 +61,9 @@ class LocalMangaScoreRepository @Inject constructor(
             .observeBySeason(seasonId)
             .map { rounds -> rounds.map(RoundMapper::toDomain) }
 
+    suspend fun getRound(roundId: String): Round? =
+        database.roundDao().getById(roundId)?.let(RoundMapper::toDomain)
+
     suspend fun createRound(
         seasonId: String,
         name: String,
@@ -79,6 +84,37 @@ class LocalMangaScoreRepository @Inject constructor(
                     updatedAt = now,
                     status = EventStatus.SCHEDULED,
                     scoringType = ScoringType.TOTAL_WEIGHT,
+                    syncStatus = SyncStatus.PENDING_CREATE,
+                ),
+            ),
+        )
+    }
+
+    fun observeCatchesByRound(roundId: String): Flow<List<Catch>> =
+        database.catchDao()
+            .observeByRound(roundId)
+            .map { catches -> catches.map(CatchMapper::toDomain) }
+
+    suspend fun createCatchForRound(
+        roundId: String,
+        participantId: String,
+        weightGrams: Int,
+        species: String?,
+    ) {
+        val now = System.currentTimeMillis()
+        val round = getRound(roundId)
+        database.catchDao().upsert(
+            CatchMapper.toEntity(
+                Catch(
+                    id = UUID.randomUUID().toString(),
+                    participantId = participantId,
+                    clubId = round?.clubId ?: DEFAULT_CLUB_ID,
+                    weightGrams = weightGrams,
+                    caughtAt = now,
+                    createdAt = now,
+                    updatedAt = now,
+                    roundId = roundId,
+                    species = species?.trim()?.takeIf(String::isNotBlank),
                     syncStatus = SyncStatus.PENDING_CREATE,
                 ),
             ),
@@ -109,6 +145,37 @@ class LocalMangaScoreRepository @Inject constructor(
                     updatedAt = now,
                     status = EventStatus.SCHEDULED,
                     scoringType = ScoringType.TOTAL_WEIGHT,
+                    syncStatus = SyncStatus.PENDING_CREATE,
+                ),
+            ),
+        )
+    }
+
+    fun observeCatchesByTournament(tournamentId: String): Flow<List<Catch>> =
+        database.catchDao()
+            .observeByTournament(tournamentId)
+            .map { catches -> catches.map(CatchMapper::toDomain) }
+
+    suspend fun createCatchForTournament(
+        tournamentId: String,
+        participantId: String,
+        weightGrams: Int,
+        species: String?,
+    ) {
+        val now = System.currentTimeMillis()
+        val tournament = getTournament(tournamentId)
+        database.catchDao().upsert(
+            CatchMapper.toEntity(
+                Catch(
+                    id = UUID.randomUUID().toString(),
+                    participantId = participantId,
+                    clubId = tournament?.clubId ?: DEFAULT_CLUB_ID,
+                    weightGrams = weightGrams,
+                    caughtAt = now,
+                    createdAt = now,
+                    updatedAt = now,
+                    tournamentId = tournamentId,
+                    species = species?.trim()?.takeIf(String::isNotBlank),
                     syncStatus = SyncStatus.PENDING_CREATE,
                 ),
             ),

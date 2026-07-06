@@ -141,6 +141,170 @@ class RankingCalculatorTest {
         assertEquals("tournament-tournament-1-participant-1", ranking.single().id)
     }
 
+    @Test
+    fun `round ranking ignores catches from other rounds`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    roundId = "round-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    roundId = "round-2",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2"),
+            competitionType = CompetitionType.ROUND,
+            roundId = "round-1",
+        )
+
+        assertEquals("participant-1", ranking[0].participantId)
+        assertEquals(1_000, ranking[0].totalWeightGrams)
+        assertEquals("participant-2", ranking[1].participantId)
+        assertEquals(0, ranking[1].totalWeightGrams)
+    }
+
+    @Test
+    fun `tournament ranking ignores catches from other tournaments`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    tournamentId = "tournament-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    tournamentId = "tournament-2",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2"),
+            competitionType = CompetitionType.TOURNAMENT,
+            tournamentId = "tournament-1",
+        )
+
+        assertEquals("participant-1", ranking[0].participantId)
+        assertEquals(1_000, ranking[0].totalWeightGrams)
+        assertEquals("participant-2", ranking[1].participantId)
+        assertEquals(0, ranking[1].totalWeightGrams)
+    }
+
+    @Test
+    fun `round ranking ignores tournament catches`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    roundId = "round-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    tournamentId = "tournament-1",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2"),
+            competitionType = CompetitionType.ROUND,
+            roundId = "round-1",
+        )
+
+        assertEquals("participant-1", ranking[0].participantId)
+        assertEquals(1_000, ranking[0].totalWeightGrams)
+        assertEquals("participant-2", ranking[1].participantId)
+        assertEquals(0, ranking[1].totalWeightGrams)
+    }
+
+    @Test
+    fun `tournament ranking ignores round catches`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    tournamentId = "tournament-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    roundId = "round-1",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2"),
+            competitionType = CompetitionType.TOURNAMENT,
+            tournamentId = "tournament-1",
+        )
+
+        assertEquals("participant-1", ranking[0].participantId)
+        assertEquals(1_000, ranking[0].totalWeightGrams)
+        assertEquals("participant-2", ranking[1].participantId)
+        assertEquals(0, ranking[1].totalWeightGrams)
+    }
+
+    @Test
+    fun `participants without catches stay at the end after filtering`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    roundId = "round-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    roundId = "round-2",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2", "participant-3"),
+            competitionType = CompetitionType.ROUND,
+            roundId = "round-1",
+        )
+
+        assertEquals(listOf("participant-1", "participant-2", "participant-3"), ranking.map { it.participantId })
+        assertEquals(listOf(1_000, 0, 0), ranking.map { it.totalWeightGrams })
+        assertEquals(listOf(1, 0, 0), ranking.map { it.catchCount })
+    }
+
+    @Test
+    fun `ranking without competition id uses all received catches`() {
+        val ranking = calculator.calculateRanking(
+            catches = listOf(
+                catchEntry(
+                    id = "catch-1",
+                    participantId = "participant-1",
+                    weightGrams = 1_000,
+                    roundId = "round-1",
+                ),
+                catchEntry(
+                    id = "catch-2",
+                    participantId = "participant-2",
+                    weightGrams = 5_000,
+                    tournamentId = "tournament-1",
+                ),
+            ),
+            participants = participants("participant-1", "participant-2"),
+            competitionType = CompetitionType.ROUND,
+        )
+
+        assertEquals(listOf("participant-2", "participant-1"), ranking.map { it.participantId })
+        assertEquals(listOf(5_000, 1_000), ranking.map { it.totalWeightGrams })
+    }
+
     private fun participants(vararg ids: String): List<Participant> =
         ids.map { id ->
             Participant(
@@ -156,6 +320,8 @@ class RankingCalculatorTest {
         id: String,
         participantId: String,
         weightGrams: Int,
+        roundId: String? = null,
+        tournamentId: String? = null,
     ): Catch =
         Catch(
             id = id,
@@ -165,5 +331,7 @@ class RankingCalculatorTest {
             caughtAt = 1L,
             createdAt = 1L,
             updatedAt = 1L,
+            roundId = roundId,
+            tournamentId = tournamentId,
         )
 }

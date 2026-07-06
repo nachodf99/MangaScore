@@ -23,6 +23,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,11 +35,16 @@ import kotlinx.coroutines.launch
 object SyncStatusScreen {
     @Composable
     operator fun invoke(
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: SyncStatusViewModel = hiltViewModel(),
     ) {
         val uiState by viewModel.uiState.collectAsState()
-        SyncStatusContent(uiState = uiState, modifier = modifier)
+        SyncStatusContent(
+            uiState = uiState,
+            onBackClick = onBackClick,
+            modifier = modifier,
+        )
     }
 }
 
@@ -46,11 +52,17 @@ object SyncStatusScreen {
 @Composable
 private fun SyncStatusContent(
     uiState: SyncStatusUiState,
+    onBackClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text("Sincronizacion") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Sincronizacion") },
+                navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+            )
+        },
     ) { paddingValues ->
         Column(
             modifier = Modifier

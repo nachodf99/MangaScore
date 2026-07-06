@@ -30,6 +30,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.nachodd.mangascore.data.repository.LocalMangaScoreRepository
 import com.nachodd.mangascore.domain.model.Participant
+import com.nachodd.mangascore.presentation.common.BackNavigationButton
 import com.nachodd.mangascore.presentation.common.EmptyStateContent
 import dagger.hilt.android.lifecycle.HiltViewModel
 import javax.inject.Inject
@@ -42,6 +43,7 @@ import kotlinx.coroutines.launch
 object ParticipantsScreen {
     @Composable
     operator fun invoke(
+        onBackClick: () -> Unit,
         modifier: Modifier = Modifier,
         viewModel: ParticipantsViewModel = hiltViewModel(),
     ) {
@@ -49,6 +51,7 @@ object ParticipantsScreen {
 
         ParticipantsContent(
             uiState = uiState,
+            onBackClick = onBackClick,
             onCreateClick = viewModel::showCreateDialog,
             onDismissDialog = viewModel::hideCreateDialog,
             onFullNameChange = viewModel::onFullNameChange,
@@ -64,6 +67,7 @@ object ParticipantsScreen {
 @Composable
 private fun ParticipantsContent(
     uiState: ParticipantsUiState,
+    onBackClick: () -> Unit,
     onCreateClick: () -> Unit,
     onDismissDialog: () -> Unit,
     onFullNameChange: (String) -> Unit,
@@ -74,7 +78,12 @@ private fun ParticipantsContent(
 ) {
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        topBar = { TopAppBar(title = { Text("Participantes") }) },
+        topBar = {
+            TopAppBar(
+                title = { Text("Participantes") },
+                navigationIcon = { BackNavigationButton(onBackClick = onBackClick) },
+            )
+        },
         floatingActionButton = {
             FloatingActionButton(onClick = onCreateClick) {
                 Text("+")
